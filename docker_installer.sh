@@ -2,8 +2,9 @@
 
 # Detect OS
 OS=$(awk -F= '/^ID=/{print $2}' /etc/os-release | tr -d '"')
+ARCH=$(uname -m)
 
-echo "Detected OS: $OS"
+echo "Detected OS: $OS, Architecture: $ARCH"
 sleep 1
 
 install_docker() {
@@ -15,14 +16,32 @@ install_docker() {
 
 install_docker_compose() {
     echo "Installing Docker Compose..."
-    LATEST_COMPOSE=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep browser_download_url | grep $(uname -s)-$(uname -m) | cut -d '"' -f 4)
-    sudo curl -L "$LATEST_COMPOSE" -o /usr/local/bin/docker-compose
+    
+    # Determine appropriate Docker Compose binary
+    if [[ "$ARCH" == "x86_64" ]]; then
+        COMPOSE_URL=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep browser_download_url | grep $(uname -s)-$(uname -m) | cut -d '"' -f 4)
+    elif [[ "$ARCH" == "armv7l" ]]; then
+        COMPOSE_URL="https://github.com/docker/compose/releases/latest/download/docker-compose-linux-armv7"
+    elif [[ "$ARCH" == "aarch64" ]]; then
+        COMPOSE_URL="https://github.com/docker/compose/releases/latest/download/docker-compose-linux-aarch64"
+    else
+        echo "Unsupported architecture for Docker Compose."
+        exit 1
+    fi
+
+    sudo curl -L "$COMPOSE_URL" -o /usr/local/bin/docker-compose
     sudo chmod +x /usr/local/bin/docker-compose
     echo "Docker Compose installed successfully!"
 }
 
 case "$OS" in
     ubuntu|debian)
+        sudo apt update
+        sudo apt install -y ca-certificates curl gnupg lsb-release
+        install_docker
+        install_docker_compose
+        ;;
+    raspbian)
         sudo apt update
         sudo apt install -y ca-certificates curl gnupg lsb-release
         install_docker
