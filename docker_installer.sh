@@ -3,15 +3,17 @@
 # Detect OS
 OS=$(awk -F= '/^ID=/{print $2}' /etc/os-release | tr -d '"')
 ARCH=$(uname -m)
+USER_NAME=$(whoami)
 
-echo "Detected OS: $OS, Architecture: $ARCH"
+echo "Detected OS: $OS, Architecture: $ARCH, User: $USER_NAME"
 sleep 1
 
 install_docker() {
     echo "Installing Docker..."
     curl -fsSL https://get.docker.com | bash
-    sudo usermod -aG docker $USER
+    sudo usermod -aG docker "$USER_NAME"
     echo "Docker installed successfully!"
+    echo "You may need to log out and log back in for group changes to take effect."
 }
 
 install_docker_compose() {
@@ -35,13 +37,7 @@ install_docker_compose() {
 }
 
 case "$OS" in
-    ubuntu|debian)
-        sudo apt update
-        sudo apt install -y ca-certificates curl gnupg lsb-release
-        install_docker
-        install_docker_compose
-        ;;
-    raspbian)
+    ubuntu|debian|raspbian)
         sudo apt update
         sudo apt install -y ca-certificates curl gnupg lsb-release
         install_docker
@@ -64,10 +60,7 @@ case "$OS" in
     arch)
         sudo pacman -Sy --noconfirm docker docker-compose
         sudo systemctl enable --now docker
-        ;;
-    opensuse*)
-        sudo zypper install -y docker docker-compose
-        sudo systemctl enable --now docker
+        sudo usermod -aG docker "$USER_NAME"
         ;;
     *)
         echo "Unsupported OS: $OS"
@@ -75,4 +68,4 @@ case "$OS" in
         ;;
 esac
 
-echo "Installation complete. You may need to restart your session for Docker group changes to apply."
+echo "Installation complete. Log out and log back in for Docker group changes to take effect."
