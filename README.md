@@ -1,7 +1,13 @@
 
 👉 Ubuntu/Debian
-👉 Raspbian
-👉 CentOS/RHEL
-👉 Fedora
-👉 Arch
-👉 OpenSUSE
+
+👉 Raspbian 
+
+👉 CentOS/RHEL 
+
+👉 Fedora 
+
+👉 Arch  
+
+👉 OpenSUSE  
+
